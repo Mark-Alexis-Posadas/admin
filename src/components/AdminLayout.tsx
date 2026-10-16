@@ -1,5 +1,11 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingBag, LogOut, Store } from "lucide-react";
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Package,
+  LogOut,
+  Store,
+} from "lucide-react";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
@@ -37,6 +43,10 @@ const AdminLayout = () => {
           <NavLink to="/admin/orders" className={navClass}>
             <ShoppingBag size={19} />
             Orders
+          </NavLink>
+          <NavLink to="/admin/products" className={navClass}>
+            <Package size={19} />
+            Products
           </NavLink>
         </nav>
 

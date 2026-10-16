@@ -5,6 +5,8 @@ import AdminLoginPage from "../features/auth/AdminLoginPage";
 import DashboardPage from "../pages/DashboardPage";
 import OrdersPage from "../features/orders/OrdersPage";
 import OrderDetailsPage from "../features/orders/OrderDetailsPage";
+import ProductsPage from "../features/products/ProductsPage";
+import ProductFormPage from "../features/products/ProductFormPage";
 
 const ProtectedAdminRoute = () => {
   const token = sessionStorage.getItem("admin_token");
@@ -39,6 +41,18 @@ export const router = createBrowserRouter([
           {
             path: "orders/:id",
             element: <OrderDetailsPage />,
+          },
+          {
+            path: "products",
+            element: <ProductsPage />,
+          },
+          {
+            path: "products/new",
+            element: <ProductFormPage />,
+          },
+          {
+            path: "products/:id/edit",
+            element: <ProductFormPage />,
           },
         ],
       },
