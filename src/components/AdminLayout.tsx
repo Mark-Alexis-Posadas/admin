@@ -5,6 +5,7 @@ import {
   Package,
   LogOut,
   Store,
+  History,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -47,6 +48,10 @@ const AdminLayout = () => {
           <NavLink to="/admin/products" className={navClass}>
             <Package size={19} />
             Products
+          </NavLink>
+          <NavLink to="/admin/inventory" className={navClass}>
+            <History size={19} />
+            Inventory
           </NavLink>
         </nav>
 

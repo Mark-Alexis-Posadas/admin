@@ -7,6 +7,7 @@ import OrdersPage from "../features/orders/OrdersPage";
 import OrderDetailsPage from "../features/orders/OrderDetailsPage";
 import ProductsPage from "../features/products/ProductsPage";
 import ProductFormPage from "../features/products/ProductFormPage";
+import InventoryHistoryPage from "../features/inventory/InventoryHistoryPage";
 
 const ProtectedAdminRoute = () => {
   const token = sessionStorage.getItem("admin_token");
@@ -53,6 +54,11 @@ export const router = createBrowserRouter([
           {
             path: "products/:id/edit",
             element: <ProductFormPage />,
+          },
+
+          {
+            path: "inventory",
+            element: <InventoryHistoryPage />,
           },
         ],
       },
