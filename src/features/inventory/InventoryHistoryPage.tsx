@@ -1,3 +1,15 @@
+import PageHeader from "../../components/ui/PageHeader";
+import RefreshButton from "../../components/ui/RefreshButton";
+import StatCard from "../../components/ui/StatCard";
+import SearchInput from "../../components/ui/SearchInput";
+import Pagination from "../../components/ui/Pagination";
+import Card from "../../components/ui/Card";
+import Button from "../../components/ui/Button";
+import SectionHeader from "../../components/ui/SectionHeader";
+import LoadingState from "../../components/ui/LoadingState";
+import EmptyState from "../../components/ui/EmptyState";
+import ErrorState from "../../components/ui/ErrorState";
+import { formatDateTime } from "../../lib/formatters";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -7,8 +19,6 @@ import {
   ArrowUpRight,
   History,
   Package,
-  RefreshCw,
-  Search,
   SlidersHorizontal,
   X,
 } from "lucide-react";
@@ -67,71 +77,64 @@ export default function InventoryHistoryPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 pb-12">
-      <header className="relative overflow-hidden rounded-3xl bg-slate-950 p-7 text-white shadow-xl sm:p-9">
-        <div className="pointer-events-none absolute -right-12 -top-24 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
-        <div className="relative flex flex-wrap items-start justify-between gap-5">
-          <div>
-            <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-indigo-300">
-              <History size={17} /> INVENTORY AUDIT TRAIL
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Inventory Activity
-            </h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-300">
-              Track manual stock adjustments, search products, and see who made
-              each change.
-            </p>
-          </div>
-          <button
-            type="button"
+      <PageHeader
+        variant="hero"
+        title="Inventory Activity"
+        subtitle="Track manual stock adjustments, search products, and see who made each change."
+        eyebrow={
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-indigo-300">
+            <History size={17} aria-hidden="true" /> INVENTORY AUDIT TRAIL
+          </p>
+        }
+        actions={
+          <RefreshButton
+            variant="inverse"
+            busy={isFetching}
             onClick={() => void refetch()}
-            disabled={isFetching}
-            className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium transition hover:bg-white/20 disabled:opacity-50"
-          >
-            <RefreshCw size={16} className={isFetching ? "animate-spin" : ""} />{" "}
-            Refresh
-          </button>
-        </div>
-      </header>
+          />
+        }
+      />
 
       <section
         className="grid gap-4 sm:grid-cols-3"
         aria-label="Current page statistics"
       >
         <StatCard
+          variant="stacked"
           label="Movements on this page"
           value={movements.length}
           icon={<History size={19} />}
         />
         <StatCard
+          variant="stacked"
           label="Units added on this page"
           value={`+${added}`}
           icon={<ArrowUpRight size={19} />}
-          tone="green"
+          tone="emerald"
         />
         <StatCard
+          variant="stacked"
           label="Units removed on this page"
           value={`−${removed}`}
           icon={<ArrowDownRight size={19} />}
-          tone="red"
+          tone="rose"
         />
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <Card>
         <div className="space-y-4 border-b border-slate-100 p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                Stock Movement Records
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                {pagination?.total ?? 0} matching adjustments · newest first
-              </p>
-            </div>
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-              <SlidersHorizontal size={16} /> Filters
-            </div>
-          </div>
+          <SectionHeader
+            className=""
+            title="Stock Movement Records"
+            description={
+              <>{pagination?.total ?? 0} matching adjustments · newest first</>
+            }
+            actions={
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                <SlidersHorizontal size={16} /> Filters
+              </div>
+            }
+          />
 
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <form
@@ -142,25 +145,24 @@ export default function InventoryHistoryPage() {
                 setPage(1);
               }}
             >
-              <Search
-                size={17}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                aria-label="Search product name or SKU"
+              <SearchInput
+                type="text"
+                label="Search product name or SKU"
                 value={searchInput}
                 maxLength={100}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search product name or SKU..."
                 className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-24 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                action={
+                  <button
+                    type="submit"
+                    disabled={isFetching}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                  >
+                    Search
+                  </button>
+                }
               />
-              <button
-                type="submit"
-                disabled={isFetching}
-                className="absolute right-1 top-1/2 -translate-y-1/2 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-              >
-                Search
-              </button>
             </form>
             <div
               className="flex flex-wrap items-center gap-2"
@@ -210,41 +212,31 @@ export default function InventoryHistoryPage() {
         </div>
 
         {isPending ? (
-          <div className="p-14 text-center text-sm text-slate-500">
-            Loading inventory history...
-          </div>
+          <LoadingState>Loading inventory history...</LoadingState>
         ) : isError ? (
-          <div role="alert" className="space-y-3 p-14 text-center">
-            <p className="text-sm text-rose-600">
-              Unable to load inventory history.
-            </p>
-            <button
-              type="button"
-              onClick={() => void refetch()}
-              className="text-sm font-semibold text-indigo-600"
-            >
-              Try again
-            </button>
-          </div>
+          <ErrorState
+            action={
+              <Button variant="ghost" onClick={() => void refetch()}>
+                Try again
+              </Button>
+            }
+          >
+            Unable to load inventory history.
+          </ErrorState>
         ) : movements.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 p-14 text-center">
-            <Package size={36} className="text-slate-300" />
-            <h3 className="font-semibold text-slate-800">
-              No matching stock movements
-            </h3>
-            <p className="text-sm text-slate-500">
-              Try another product name, SKU, or movement type.
-            </p>
-            {hasFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-sm font-semibold text-indigo-600"
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={<Package size={36} />}
+            title="No matching stock movements"
+            action={
+              hasFilters && (
+                <Button variant="ghost" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              )
+            }
+          >
+            Try another product name, SKU, or movement type.
+          </EmptyState>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[950px] text-left">
@@ -322,11 +314,7 @@ export default function InventoryHistoryPage() {
                         </p>
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">
-                        {new Date(movement.createdAt).toLocaleString("en-PH", {
-                          dateStyle: "medium",
-                          timeStyle: "short",
-                          timeZone: "Asia/Manila",
-                        })}
+                        {formatDateTime(movement.createdAt)}
                       </td>
                     </tr>
                   );
@@ -336,58 +324,29 @@ export default function InventoryHistoryPage() {
           </div>
         )}
         {pagination && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between gap-4 border-t border-slate-100 px-5 py-4">
-            <p className="text-sm text-slate-500">
-              Page {pagination.page} of {pagination.totalPages}
-            </p>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={page <= 1 || isFetching}
-                onClick={() => setPage((p) => p - 1)}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium disabled:opacity-40"
-              >
-                <ArrowLeft size={15} className="mr-1 inline" /> Previous
-              </button>
-              <button
-                type="button"
-                disabled={page >= pagination.totalPages || isFetching}
-                onClick={() => setPage((p) => p + 1)}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium disabled:opacity-40"
-              >
-                Next <ArrowRight size={15} className="ml-1 inline" />
-              </button>
-            </div>
-          </div>
+          <Pagination
+            page={page}
+            totalPages={pagination.totalPages}
+            busy={isFetching}
+            onPageChange={setPage}
+            summary={
+              <>
+                Page {pagination.page} of {pagination.totalPages}
+              </>
+            }
+            previousLabel={
+              <>
+                <ArrowLeft size={15} aria-hidden="true" /> Previous
+              </>
+            }
+            nextLabel={
+              <>
+                Next <ArrowRight size={15} aria-hidden="true" />
+              </>
+            }
+          />
         )}
-      </section>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon,
-  tone = "slate",
-}: {
-  label: string;
-  value: number | string;
-  icon: React.ReactNode;
-  tone?: "slate" | "green" | "red";
-}) {
-  const colors = {
-    slate: "bg-indigo-50 text-indigo-600",
-    green: "bg-emerald-50 text-emerald-600",
-    red: "bg-rose-50 text-rose-600",
-  };
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className={`mb-4 inline-flex rounded-xl p-3 ${colors[tone]}`}>
-        {icon}
-      </div>
-      <p className="text-sm text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-slate-900">{value}</p>
+      </Card>
     </div>
   );
 }

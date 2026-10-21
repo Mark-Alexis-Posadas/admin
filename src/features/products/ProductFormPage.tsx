@@ -1,10 +1,7 @@
-import {
-  useEffect,
-  useMemo,
-  useState,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import Field from "../../components/ui/FormField";
+import Section from "./components/ProductFormSection";
+import { formatCurrency as peso } from "../../lib/formatters";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -46,68 +43,13 @@ const blank: ProductPayload = {
 
 const inputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 disabled:bg-slate-50";
-const peso = (value: number) =>
-  new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(
-    value,
-  );
+
 const slugify = (value: string) =>
   value
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-
-function Field({
-  label,
-  hint,
-  children,
-  required,
-}: {
-  label: string;
-  hint?: string;
-  children: ReactNode;
-  required?: boolean;
-}) {
-  return (
-    <label className="block space-y-2">
-      <span className="block text-sm font-semibold text-slate-700">
-        {label}
-        {required && <span className="ml-1 text-rose-500">*</span>}
-      </span>
-      {children}
-      {hint && (
-        <span className="block text-xs leading-5 text-slate-400">{hint}</span>
-      )}
-    </label>
-  );
-}
-
-function Section({
-  icon,
-  title,
-  subtitle,
-  children,
-}: {
-  icon: ReactNode;
-  title: string;
-  subtitle: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex items-start gap-3 border-b border-slate-100 px-5 py-5 sm:px-7">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-          {icon}
-        </div>
-        <div>
-          <h3 className="font-bold text-slate-900">{title}</h3>
-          <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
-        </div>
-      </div>
-      <div className="space-y-5 p-5 sm:p-7">{children}</div>
-    </section>
-  );
-}
 
 export default function ProductFormPage() {
   const { id } = useParams();

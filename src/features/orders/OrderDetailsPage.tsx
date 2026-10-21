@@ -1,3 +1,8 @@
+import Badge from "../../components/ui/Badge";
+import { formatDateTime } from "../../lib/formatters";
+import LoadingState from "../../components/ui/LoadingState";
+import ErrorState from "../../components/ui/ErrorState";
+import { formatCurrency as peso } from "../../lib/formatters";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
@@ -13,12 +18,6 @@ const transitions: Record<OrderStatus, OrderStatus[]> = {
   delivered: [],
   cancelled: [],
 };
-
-const peso = (value: number) =>
-  new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(value);
 
 const OrderDetailsPage = () => {
   const { id = "" } = useParams();
@@ -60,8 +59,10 @@ const OrderDetailsPage = () => {
     },
   });
 
-  if (isLoading) return <p>Loading order...</p>;
-  if (isError || !order) return <p>Order not found.</p>;
+  if (isLoading)
+    return <LoadingState className="">Loading order...</LoadingState>;
+  if (isError || !order)
+    return <ErrorState className="">Order not found.</ErrorState>;
 
   const address = order.shippingAddress;
 
@@ -87,13 +88,13 @@ const OrderDetailsPage = () => {
         <div>
           <h2 className="text-2xl font-bold">Order #{order._id.slice(-8)}</h2>
           <p className="mt-1 text-sm text-slate-500">
-            {new Date(order.createdAt).toLocaleString("en-PH")}
+            {formatDateTime(order.createdAt, {})}
           </p>
         </div>
 
-        <span className="rounded-full bg-indigo-50 px-4 py-2 text-sm font-semibold capitalize text-indigo-700">
+        <Badge tone="indigo" className="px-4 py-2 text-sm font-semibold">
           {order.orderStatus}
-        </span>
+        </Badge>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">

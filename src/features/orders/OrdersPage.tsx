@@ -1,12 +1,12 @@
+import PageHeader from "../../components/ui/PageHeader";
+import Badge from "../../components/ui/Badge";
+import { formatDate } from "../../lib/formatters";
+import LoadingState from "../../components/ui/LoadingState";
+import ErrorState from "../../components/ui/ErrorState";
+import { formatCurrency as peso } from "../../lib/formatters";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { orderApi } from "./order.api";
-
-const peso = (value: number) =>
-  new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(value);
 
 const OrdersPage = () => {
   const {
@@ -18,15 +18,14 @@ const OrdersPage = () => {
     queryFn: orderApi.getAll,
   });
 
-  if (isLoading) return <p>Loading orders...</p>;
-  if (isError) return <p>Failed to load orders.</p>;
+  if (isLoading)
+    return <LoadingState className="">Loading orders...</LoadingState>;
+  if (isError)
+    return <ErrorState className="">Failed to load orders.</ErrorState>;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Orders</h2>
-        <p className="mt-1 text-slate-500">Manage customer orders.</p>
-      </div>
+      <PageHeader title="Orders" subtitle="Manage customer orders." />
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full min-w-[750px] text-left text-sm">
@@ -54,13 +53,11 @@ const OrdersPage = () => {
                 <td className="p-4">{peso(order.total)}</td>
 
                 <td className="p-4">
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium capitalize">
-                    {order.orderStatus}
-                  </span>
+                  <Badge>{order.orderStatus}</Badge>
                 </td>
 
                 <td className="p-4 text-slate-500">
-                  {new Date(order.createdAt).toLocaleDateString("en-PH")}
+                  {formatDate(order.createdAt, {})}
                 </td>
 
                 <td className="p-4">

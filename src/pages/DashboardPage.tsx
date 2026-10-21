@@ -1,12 +1,11 @@
+import PageHeader from "../components/ui/PageHeader";
+import StatCard from "../components/ui/StatCard";
+import LoadingState from "../components/ui/LoadingState";
+import ErrorState from "../components/ui/ErrorState";
+import { formatCurrency as peso } from "../lib/formatters";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { orderApi } from "../features/orders/order.api";
-
-const peso = (value: number) =>
-  new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(value);
 
 const DashboardPage = () => {
   const {
@@ -18,8 +17,10 @@ const DashboardPage = () => {
     queryFn: orderApi.getAll,
   });
 
-  if (isLoading) return <p>Loading dashboard...</p>;
-  if (isError) return <p>Unable to load dashboard.</p>;
+  if (isLoading)
+    return <LoadingState className="">Loading dashboard...</LoadingState>;
+  if (isError)
+    return <ErrorState className="">Unable to load dashboard.</ErrorState>;
 
   const pending = orders.filter(
     (order) => order.orderStatus === "pending",
@@ -43,20 +44,19 @@ const DashboardPage = () => {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold">Dashboard Overview</h2>
-        <p className="mt-1 text-slate-500">Welcome to ShopSphere Admin.</p>
-      </div>
+      <PageHeader
+        title="Dashboard Overview"
+        subtitle="Welcome to ShopSphere Admin."
+      />
 
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map((stat) => (
-          <div
+          <StatCard
             key={stat.label}
-            className="rounded-xl border border-slate-200 bg-white p-6"
-          >
-            <p className="text-sm text-slate-500">{stat.label}</p>
-            <p className="mt-3 text-2xl font-bold">{stat.value}</p>
-          </div>
+            variant="simple"
+            label={stat.label}
+            value={stat.value}
+          />
         ))}
       </div>
 

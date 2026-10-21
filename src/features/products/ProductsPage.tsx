@@ -1,3 +1,9 @@
+import Badge from "../../components/ui/Badge";
+import SectionHeader from "../../components/ui/SectionHeader";
+import StatCard from "../../components/ui/StatCard";
+import RefreshButton from "../../components/ui/RefreshButton";
+import SearchInput from "../../components/ui/SearchInput";
+import { formatCurrency } from "../../lib/formatters";
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -14,7 +20,6 @@ import {
   Pencil,
   Plus,
   RefreshCw,
-  Search,
   SlidersHorizontal,
   Sparkles,
   X,
@@ -34,11 +39,7 @@ type StockUpdate = {
   newStock: number;
 };
 const peso = (value: number) =>
-  new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-    maximumFractionDigits: 2,
-  }).format(Number.isFinite(value) ? value : 0);
+  formatCurrency(Number.isFinite(value) ? value : 0);
 
 const filters: { value: ProductFilter; label: string }[] = [
   { value: "all", label: "All products" },
@@ -68,42 +69,6 @@ function ProductThumbnail({ product }: { product: AdminProduct }) {
       onError={() => setBrokenUrl(image.url)}
       className="h-12 w-12 shrink-0 rounded-xl border border-slate-200 bg-slate-100 object-cover"
     />
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-  accent,
-  note,
-}: {
-  label: string;
-  value: number;
-  icon: typeof Package;
-  accent: "indigo" | "emerald" | "amber" | "slate";
-  note: string;
-}) {
-  const palette = {
-    indigo: "bg-indigo-50 text-indigo-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    amber: "bg-amber-50 text-amber-600",
-    slate: "bg-slate-100 text-slate-600",
-  };
-
-  return (
-    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/40">
-      <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-        <div className={`rounded-xl p-2.5 ${palette[accent]}`}>
-          <Icon size={19} strokeWidth={1.9} />
-        </div>
-      </div>
-      <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">
-        {value.toLocaleString()}
-      </p>
-      <p className="mt-1 text-xs text-slate-400">{note}</p>
-    </div>
   );
 }
 
@@ -263,74 +228,53 @@ export default function ProductsPage() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total products"
-          value={stats.total}
-          icon={Boxes}
-          accent="indigo"
+          value={stats.total.toLocaleString()}
+          icon={<Boxes size={19} strokeWidth={1.9} />}
+          tone="indigo"
           note="Products in your catalog"
         />
         <StatCard
           label="Active products"
-          value={stats.active}
-          icon={CheckCircle2}
-          accent="emerald"
+          value={stats.active.toLocaleString()}
+          icon={<CheckCircle2 size={19} strokeWidth={1.9} />}
+          tone="emerald"
           note="Visible to customers"
         />
         <StatCard
           label="Low stock"
-          value={stats.lowStock}
-          icon={AlertCircle}
-          accent="amber"
+          value={stats.lowStock.toLocaleString()}
+          icon={<AlertCircle size={19} strokeWidth={1.9} />}
+          tone="amber"
           note="At or below threshold"
         />
         <StatCard
           label="Inactive products"
-          value={stats.inactive}
-          icon={CircleOff}
-          accent="slate"
+          value={stats.inactive.toLocaleString()}
+          icon={<CircleOff size={19} strokeWidth={1.9} />}
+          tone="slate"
           note="Hidden from storefront"
         />
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-200/40">
         <div className="border-b border-slate-100 px-5 py-5 sm:px-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold tracking-tight text-slate-900">
-                All products
-              </h2>
-              <p className="mt-1 text-sm text-slate-500">
-                Browse and update your ShopSphere catalog.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => void refetch()}
-              disabled={isFetching}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
-            >
-              <RefreshCw
-                size={16}
-                className={isFetching ? "animate-spin" : ""}
-              />{" "}
-              Refresh
-            </button>
-          </div>
+          <SectionHeader
+            className=""
+            title="All products"
+            description="Browse and update your ShopSphere catalog."
+            actions={
+              <RefreshButton busy={isFetching} onClick={() => void refetch()} />
+            }
+          />
 
           <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="relative flex-1">
-              <Search
-                size={18}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search by name, SKU, brand, category..."
-                aria-label="Search products"
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50"
-              />
-            </div>
+            <SearchInput
+              label="Search products"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by name, SKU, brand, category..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-indigo-400 focus:bg-white focus:ring-4 focus:ring-indigo-50"
+            />
             <div className="relative">
               <SlidersHorizontal
                 size={16}
@@ -561,14 +505,15 @@ export default function ProductsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span
-                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-semibold ${product.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
+                        <Badge
+                          tone={product.isActive ? "emerald" : "slate"}
+                          className="gap-1.5 px-2.5 py-1.5 font-semibold"
                         >
                           <span
                             className={`h-1.5 w-1.5 rounded-full ${product.isActive ? "bg-emerald-500" : "bg-slate-400"}`}
                           />
                           {product.isActive ? "Active" : "Inactive"}
-                        </span>
+                        </Badge>
                       </td>
                       <td className="px-5 py-4 sm:pr-6">
                         <div className="flex items-center justify-end gap-2">
