@@ -6,6 +6,7 @@ import {
   LogOut,
   Store,
   History,
+  Users,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -36,6 +37,10 @@ const AdminLayout = () => {
         </p>
 
         <nav className="space-y-2">
+          <NavLink to="/admin/customers" className={navClass}>
+            <Users size={19} />
+            Customers
+          </NavLink>
           <NavLink to="/admin" end className={navClass}>
             <LayoutDashboard size={19} />
             Dashboard

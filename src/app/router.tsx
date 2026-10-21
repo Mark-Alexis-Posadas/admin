@@ -8,6 +8,8 @@ import OrderDetailsPage from "../features/orders/OrderDetailsPage";
 import ProductsPage from "../features/products/ProductsPage";
 import ProductFormPage from "../features/products/ProductFormPage";
 import InventoryHistoryPage from "../features/inventory/InventoryHistoryPage";
+import CustomersPage from "../features/customers/CustomersPage";
+import CustomerDetailsPage from "../features/customers/CustomerDetailsPage";
 
 const ProtectedAdminRoute = () => {
   const token = sessionStorage.getItem("admin_token");
@@ -31,6 +33,8 @@ export const router = createBrowserRouter([
         path: "/admin",
         element: <AdminLayout />,
         children: [
+          { path: "customers", element: <CustomersPage /> },
+          { path: "customers/:id", element: <CustomerDetailsPage /> },
           {
             index: true,
             element: <DashboardPage />,
