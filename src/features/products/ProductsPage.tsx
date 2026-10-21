@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  History,
   AlertCircle,
   ArrowUpRight,
   Boxes,
@@ -578,6 +579,14 @@ export default function ProductsPage() {
                             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
                           >
                             <Pencil size={14} /> Edit
+                          </Link>
+                          <Link
+                            to={`/admin/inventory?productId=${product._id}`}
+                            title={`View stock history for ${product.name}`}
+                            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                          >
+                            <History size={15} />
+                            History
                           </Link>
                           <button
                             type="button"
