@@ -10,6 +10,7 @@ import ProductFormPage from "../features/products/ProductFormPage";
 import InventoryHistoryPage from "../features/inventory/InventoryHistoryPage";
 import CustomersPage from "../features/customers/CustomersPage";
 import CustomerDetailsPage from "../features/customers/CustomerDetailsPage";
+import AnalyticsRoute from "../features/analytics/AnalyticsRoute";
 
 const ProtectedAdminRoute = () => {
   const token = sessionStorage.getItem("admin_token");
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
         path: "/admin",
         element: <AdminLayout />,
         children: [
+          { path: "analytics", element: <AnalyticsRoute /> },
           { path: "customers", element: <CustomersPage /> },
           { path: "customers/:id", element: <CustomerDetailsPage /> },
           {

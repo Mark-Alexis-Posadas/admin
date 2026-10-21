@@ -7,6 +7,7 @@ import {
   Store,
   History,
   Users,
+  BarChart3,
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -37,6 +38,10 @@ const AdminLayout = () => {
         </p>
 
         <nav className="space-y-2">
+          <NavLink to="/admin/analytics" className={navClass}>
+            <BarChart3 size={19} />
+            Sales Analytics
+          </NavLink>
           <NavLink to="/admin/customers" className={navClass}>
             <Users size={19} />
             Customers
