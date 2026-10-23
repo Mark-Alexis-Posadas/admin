@@ -23,4 +23,11 @@ export const orderApi = {
 
     return data.order;
   },
+  collectCod: async (id: string): Promise<AdminOrder> => {
+    const { data } = await api.post<{ message: string; order: AdminOrder }>(
+      `/admin/orders/${id}/collect-cod`,
+      { confirmed: true },
+    );
+    return data.order;
+  },
 };

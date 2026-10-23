@@ -1,9 +1,5 @@
 export type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "shipped"
-  | "delivered"
-  | "cancelled";
+  "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
 
 export interface AdminOrder {
   _id: string;
@@ -31,6 +27,8 @@ export interface AdminOrder {
   };
   paymentMethod: "COD";
   paymentStatus: "unpaid" | "paid";
+  paidAt?: string;
+  paymentCollectedBy?: string;
   orderStatus: OrderStatus;
   subtotal: number;
   shippingFee: number;

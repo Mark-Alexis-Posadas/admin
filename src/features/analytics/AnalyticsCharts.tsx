@@ -16,7 +16,13 @@ import {
 } from "../../lib/formatters";
 import { statusColors } from "./analytics.utils";
 
-export function RevenueChart({ report }: { report: AnalyticsReport }) {
+export function RevenueChart({
+  report,
+  label = "Paid revenue",
+}: {
+  report: AnalyticsReport;
+  label?: string;
+}) {
   const titleId = useId();
   const gradientId = useId();
 
@@ -24,8 +30,8 @@ export function RevenueChart({ report }: { report: AnalyticsReport }) {
     <>
       <div className="mt-5 h-72 min-w-0" role="group" aria-labelledby={titleId}>
         <p id={titleId} className="sr-only">
-          Paid revenue by {report.filters.interval}, in {report.currency}. Use
-          arrow keys on the chart to inspect values, or expand the data table.
+          {label} by {report.filters.interval}, in {report.currency}. Use arrow
+          keys on the chart to inspect values, or expand the data table.
         </p>
         <ResponsiveContainer width="100%" height="100%" minWidth={0}>
           <AreaChart
@@ -66,7 +72,7 @@ export function RevenueChart({ report }: { report: AnalyticsReport }) {
               labelFormatter={(label) => reportDate(String(label))}
               formatter={(value) => [
                 money(Number(value), report.currency),
-                "Paid revenue",
+                label,
               ]}
               contentStyle={{
                 borderRadius: 12,
@@ -77,7 +83,7 @@ export function RevenueChart({ report }: { report: AnalyticsReport }) {
             <Area
               type="linear"
               dataKey="revenue"
-              name="Paid revenue"
+              name={label}
               stroke="#4f46e5"
               strokeWidth={2.5}
               fill={`url(#${gradientId})`}
@@ -94,7 +100,7 @@ export function RevenueChart({ report }: { report: AnalyticsReport }) {
         <div className="mt-3 max-h-64 overflow-auto">
           <table className="w-full text-left text-xs">
             <caption className="sr-only">
-              Revenue and paid sales per reporting period
+              {label} and qualifying payments per reporting period
             </caption>
             <thead>
               <tr>
@@ -102,7 +108,9 @@ export function RevenueChart({ report }: { report: AnalyticsReport }) {
                   Period starts
                 </th>
                 <th scope="col">Revenue</th>
-                <th scope="col">Paid sales</th>
+                <th scope="col">
+                  {label === "COD collections" ? "Collections" : "Paid sales"}
+                </th>
               </tr>
             </thead>
             <tbody>

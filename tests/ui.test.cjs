@@ -323,14 +323,22 @@ test("orders and order details retain customer, totals, detail links and allowed
     [[["admin", "orders", id], order]],
     "/admin/orders/:id",
   );
-  for (const text of [
-    "Mark as confirmed",
-    "Cancel Order",
-    "Fixture Street",
-    "COD",
-    "paid",
-  ])
+  for (const text of ["Mark as confirmed", "Fixture Street", "COD", "paid"])
     assert.ok(details.includes(text), text);
+  assert.ok(
+    !details.includes("Cancel Order"),
+    "paid orders cannot be cancelled",
+  );
+  const unpaid = page(
+    "features/orders/OrderDetailsPage",
+    `/admin/orders/${id}`,
+    [[["admin", "orders", id], { ...order, paymentStatus: "unpaid" }]],
+    "/admin/orders/:id",
+  );
+  assert.ok(
+    unpaid.includes("Cancel Order"),
+    "unpaid pending orders retain cancellation",
+  );
   const delivered = page(
     "features/orders/OrderDetailsPage",
     `/admin/orders/${id}`,
@@ -486,4 +494,89 @@ test("customer and analytics loading and empty states remain distinct", () => {
     ],
   );
   assert.ok(noOrders.includes("No orders in this date range"));
+});
+
+test("COD collection action is delivered-only, unpaid-only, and displays admin audit details", () => {
+  const details = (value) =>
+    page(
+      "features/orders/OrderDetailsPage",
+      `/admin/orders/${id}`,
+      [[["admin", "orders", id], value]],
+      "/admin/orders/:id",
+    );
+  assert.match(
+    details({ ...order, orderStatus: "delivered", paymentStatus: "unpaid" }),
+    />Confirm COD Collection</,
+  );
+  for (const orderStatus of ["pending", "confirmed", "shipped", "cancelled"]) {
+    assert.ok(
+      !details({ ...order, orderStatus, paymentStatus: "unpaid" }).includes(
+        "Confirm COD Collection",
+      ),
+    );
+  }
+  const paid = details({
+    ...order,
+    orderStatus: "delivered",
+    paymentStatus: "paid",
+    paidAt: createdAt,
+    paymentCollectedBy: id,
+  });
+  assert.ok(!paid.includes("Confirm COD Collection"));
+  assert.ok(paid.includes("Collection confirmed:"));
+  assert.ok(paid.includes(`Confirmed by administrator ID: ${id}`));
+  assert.ok(
+    details({ ...order, orderStatus: "delivered" }).includes(
+      "Legacy paid order",
+    ),
+  );
+});
+
+test("COD API sends explicit confirmation without an authoritative amount or actor", async (t) => {
+  const { api } = require("../src/lib/api.ts");
+  const { orderApi } = require("../src/features/orders/order.api.ts");
+  const paid = {
+    ...order,
+    paymentStatus: "paid",
+    paidAt: createdAt,
+    paymentCollectedBy: id,
+  };
+  const post = t.mock.method(api, "post", async (path, payload) => {
+    assert.equal(path, `/admin/orders/${id}/collect-cod`);
+    assert.deepEqual(payload, { confirmed: true });
+    return { data: { message: "Confirmed", order: paid } };
+  });
+  assert.deepEqual(await orderApi.collectCod(id), paid);
+  assert.equal(post.mock.callCount(), 1);
+});
+
+test("collection-date reporting remains visible when the creation-date cohort is empty", () => {
+  const html = page(
+    "features/analytics/SalesAnalyticsPage",
+    "/admin/analytics",
+    [
+      [
+        ["admin", "analytics", { range: "30d", interval: "day" }],
+        {
+          ...report,
+          summary: {
+            ...report.summary,
+            totalOrders: 0,
+            totalRevenue: 0,
+            salesCount: 0,
+          },
+          collections: {
+            basis: "COD collections by paidAt",
+            totalRevenue: 255,
+            collectionCount: 1,
+            trend: [{ date: "2026-10-01", revenue: 255, collectionCount: 1 }],
+          },
+        },
+      ],
+    ],
+  );
+  assert.ok(html.includes("No orders in this date range"));
+  assert.ok(html.includes("COD collections by confirmation date"));
+  assert.ok(html.includes("COD collections by paidAt"));
+  assert.ok(html.includes(formatters.formatCurrency(255)));
 });

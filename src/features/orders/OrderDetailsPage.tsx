@@ -1,4 +1,5 @@
 import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
 import { formatDateTime } from "../../lib/formatters";
 import LoadingState from "../../components/ui/LoadingState";
 import ErrorState from "../../components/ui/ErrorState";
@@ -23,6 +24,8 @@ const OrderDetailsPage = () => {
   const { id = "" } = useParams();
   const queryClient = useQueryClient();
   const [error, setError] = useState("");
+  const [collectionError, setCollectionError] = useState("");
+  const [collectionSuccess, setCollectionSuccess] = useState("");
 
   const {
     data: order,
@@ -59,12 +62,51 @@ const OrderDetailsPage = () => {
     },
   });
 
+  const collection = useMutation({
+    mutationFn: () => orderApi.collectCod(id),
+    retry: false,
+    onSuccess: async (updated) => {
+      setCollectionError("");
+      setCollectionSuccess("COD collection recorded successfully.");
+      queryClient.setQueryData(["admin", "orders", id], updated);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "orders"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "customers"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "analytics"] }),
+      ]);
+    },
+    onError: async (failure) => {
+      setCollectionSuccess("");
+      setCollectionError(
+        axios.isAxiosError(failure)
+          ? (failure.response?.data?.message ??
+              "Unable to record collection. Refresh the order before retrying.")
+          : "Unable to record collection. Refresh the order before retrying.",
+      );
+      // A duplicate, stale request or ambiguous network error may have committed.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["admin", "orders"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "analytics"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "customers"] }),
+      ]);
+    },
+  });
+
   if (isLoading)
     return <LoadingState className="">Loading order...</LoadingState>;
   if (isError || !order)
     return <ErrorState className="">Order not found.</ErrorState>;
 
   const address = order.shippingAddress;
+  const nextStatuses = transitions[order.orderStatus].filter(
+    (status) => status !== "cancelled" || order.paymentStatus !== "paid",
+  );
+  const eligible =
+    order.paymentMethod === "COD" &&
+    order.paymentStatus === "unpaid" &&
+    order.orderStatus === "delivered" &&
+    !order.paidAt &&
+    !order.paymentCollectedBy;
 
   const handleStatusChange = (status: OrderStatus) => {
     if (status === "cancelled") {
@@ -161,6 +203,59 @@ const OrderDetailsPage = () => {
             <p className="mt-1 text-sm capitalize">
               Status: {order.paymentStatus}
             </p>
+            {order.paidAt && (
+              <p className="mt-3 text-sm text-slate-600">
+                Collection confirmed: {formatDateTime(order.paidAt, {})}
+              </p>
+            )}
+            {order.paymentCollectedBy && (
+              <p className="mt-1 break-all text-xs text-slate-500">
+                Confirmed by administrator ID: {order.paymentCollectedBy}
+              </p>
+            )}
+            {order.paymentStatus === "paid" && !order.paidAt && (
+              <p className="mt-3 text-xs text-slate-500">
+                Legacy paid order: collection audit details are unavailable.
+              </p>
+            )}
+            {eligible && (
+              <Button
+                variant="primary"
+                className="mt-4 w-full"
+                disabled={collection.isPending || mutation.isPending}
+                onClick={() => {
+                  setCollectionError("");
+                  setCollectionSuccess("");
+                  if (
+                    window.confirm(
+                      `Confirm that the full COD payment of ${peso(order.total)} has been collected for this delivered order? This cannot be undone here.`,
+                    )
+                  )
+                    collection.mutate();
+                }}
+              >
+                {collection.isPending
+                  ? "Recording collection..."
+                  : "Confirm COD Collection"}
+              </Button>
+            )}
+            {order.paymentStatus === "unpaid" &&
+              order.orderStatus !== "delivered" && (
+                <p className="mt-3 text-xs text-slate-500">
+                  COD collection can be confirmed only after delivery. Delivery
+                  does not automatically record payment.
+                </p>
+              )}
+            {collectionSuccess && (
+              <p role="status" className="mt-3 text-sm text-emerald-700">
+                {collectionSuccess}
+              </p>
+            )}
+            {collectionError && (
+              <p role="alert" className="mt-3 text-sm text-red-600">
+                {collectionError}
+              </p>
+            )}
           </section>
         </div>
       </div>
@@ -180,10 +275,10 @@ const OrderDetailsPage = () => {
         )}
 
         <div className="flex flex-wrap gap-3">
-          {transitions[order.orderStatus].map((status) => (
+          {nextStatuses.map((status) => (
             <button
               key={status}
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || collection.isPending}
               onClick={() => handleStatusChange(status)}
               className={`rounded-lg px-5 py-3 text-sm font-medium text-white disabled:opacity-50 ${
                 status === "cancelled"
@@ -200,7 +295,7 @@ const OrderDetailsPage = () => {
           ))}
         </div>
 
-        {transitions[order.orderStatus].length === 0 && (
+        {nextStatuses.length === 0 && (
           <p className="text-sm text-slate-500">
             No further status changes are allowed.
           </p>

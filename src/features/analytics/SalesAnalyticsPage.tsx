@@ -313,6 +313,34 @@ export default function SalesAnalyticsPage() {
               />
             ))}
           </section>
+          {data.collections && (
+            <Card className="p-5 sm:p-6">
+              <SectionHeader
+                title="COD collections by confirmation date"
+                description={data.collections.basis}
+                className="mb-4"
+                actions={
+                  <p className="text-right font-bold text-slate-900">
+                    {money(data.collections.totalRevenue, data.currency)}
+                    <span className="block text-xs font-normal text-slate-500">
+                      {data.collections.collectionCount} collections
+                    </span>
+                  </p>
+                }
+              />
+              <RevenueChart
+                label="COD collections"
+                report={{
+                  ...data,
+                  trend: data.collections.trend.map((point) => ({
+                    date: point.date,
+                    revenue: point.revenue,
+                    salesCount: point.collectionCount,
+                  })),
+                }}
+              />
+            </Card>
+          )}
           {data.summary.totalOrders === 0 ? (
             <Card>
               <EmptyState
