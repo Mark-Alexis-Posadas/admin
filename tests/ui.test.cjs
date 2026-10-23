@@ -398,6 +398,65 @@ test("inventory preserves audit details, filters, and page statistics", () => {
     assert.ok(html.includes(text), text);
 });
 
+test("inventory distinguishes sales/restorations, links orders and preserves product-specific history", () => {
+  const movements = [
+    {
+      _id: id,
+      product,
+      type: "sale",
+      actorType: "customer",
+      actor: customer,
+      admin: null,
+      order: id,
+      adjustment: -2,
+      previousStock: 8,
+      newStock: 6,
+      reason: "Customer checkout",
+      createdAt,
+    },
+    {
+      _id: productId,
+      product,
+      type: "cancellation",
+      actorType: "admin",
+      actor: customer,
+      admin: customer,
+      order: id,
+      adjustment: 2,
+      previousStock: 6,
+      newStock: 8,
+      reason: "Order cancellation stock restoration",
+      createdAt,
+    },
+  ];
+  const html = page(
+    "features/inventory/InventoryHistoryPage",
+    `/admin/inventory?productId=${productId}`,
+    [
+      [
+        ["admin", "inventory", "movements", 1, "", "all", productId],
+        { movements, pagination },
+      ],
+    ],
+    "/admin/inventory",
+  );
+  for (const text of [
+    "Sales",
+    "Cancellations",
+    "Checkout sale",
+    "Cancellation restoration",
+    "Customer checkout",
+    "Showing one product only",
+    "customer",
+    "admin",
+    "-2",
+    "+2",
+  ])
+    assert.ok(html.includes(text), text);
+  assert.ok(html.includes(`href="/admin/orders/${id}"`));
+  assert.ok(html.includes(customer.email));
+});
+
 test("customer list and profile preserve spending, pagination, and order links", () => {
   const html = page("features/customers/CustomersPage", "/admin/customers", [
     [

@@ -64,6 +64,7 @@ export default function AdjustStockModal({
       await queryClient.invalidateQueries({
         queryKey: ["admin", "products"],
       });
+      await queryClient.invalidateQueries({ queryKey: ["admin", "inventory"] });
 
       onSuccess({
         productId: product._id,

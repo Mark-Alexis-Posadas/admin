@@ -11,6 +11,7 @@ import EmptyState from "../../components/ui/EmptyState";
 import ErrorState from "../../components/ui/ErrorState";
 import { formatDateTime } from "../../lib/formatters";
 import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowDownRight,
@@ -22,17 +23,19 @@ import {
   SlidersHorizontal,
   X,
 } from "lucide-react";
-import { inventoryApi } from "./inventory.api";
+import { inventoryApi, type InventoryMovementType } from "./inventory.api";
 
-type MovementType = "all" | "added" | "removed";
 const PAGE_SIZE = 10;
 
 export default function InventoryHistoryPage() {
+  const [params] = useSearchParams();
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [type, setType] = useState<MovementType>("all");
-  const [productId, setProductId] = useState<string | undefined>(undefined);
+  const [type, setType] = useState<InventoryMovementType>("all");
+  const [productId, setProductId] = useState<string | undefined>(
+    () => params.get("productId") ?? undefined,
+  );
 
   const { data, isPending, isError, isFetching, refetch } = useQuery({
     queryKey: [
@@ -80,7 +83,7 @@ export default function InventoryHistoryPage() {
       <PageHeader
         variant="hero"
         title="Inventory Activity"
-        subtitle="Track manual stock adjustments, search products, and see who made each change."
+        subtitle="Track manual adjustments, checkout deductions, and order cancellation restorations."
         eyebrow={
           <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-indigo-300">
             <History size={17} aria-hidden="true" /> INVENTORY AUDIT TRAIL
@@ -127,7 +130,7 @@ export default function InventoryHistoryPage() {
             className=""
             title="Stock Movement Records"
             description={
-              <>{pagination?.total ?? 0} matching adjustments · newest first</>
+              <>{pagination?.total ?? 0} matching movements · newest first</>
             }
             actions={
               <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
@@ -169,7 +172,16 @@ export default function InventoryHistoryPage() {
               role="group"
               aria-label="Movement type"
             >
-              {(["all", "added", "removed"] as const).map((value) => (
+              {(
+                [
+                  "all",
+                  "added",
+                  "removed",
+                  "manual",
+                  "sale",
+                  "cancellation",
+                ] as const
+              ).map((value) => (
                 <button
                   key={value}
                   type="button"
@@ -180,7 +192,13 @@ export default function InventoryHistoryPage() {
                   }}
                   className={`rounded-xl border px-4 py-2.5 text-sm font-semibold capitalize transition ${type === value ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"}`}
                 >
-                  {value === "all" ? "All movements" : value}
+                  {value === "all"
+                    ? "All movements"
+                    : value === "sale"
+                      ? "Sales"
+                      : value === "cancellation"
+                        ? "Cancellations"
+                        : value}
                 </button>
               ))}
               {hasFilters && (
@@ -244,6 +262,7 @@ export default function InventoryHistoryPage() {
                 <tr>
                   <th className="px-5 py-4">Product</th>
                   <th className="px-5 py-4">Adjustment</th>
+                  <th className="px-5 py-4">Type / Order</th>
                   <th className="px-5 py-4">Stock change</th>
                   <th className="px-5 py-4">Reason</th>
                   <th className="px-5 py-4">Updated by</th>
@@ -253,6 +272,9 @@ export default function InventoryHistoryPage() {
               <tbody className="divide-y divide-slate-100">
                 {movements.map((movement) => {
                   const isAddition = movement.adjustment > 0;
+                  const movementType = movement.type ?? "manual";
+                  const actorType = movement.actorType ?? "admin";
+                  const actor = movement.actor ?? movement.admin;
                   return (
                     <tr
                       key={movement._id}
@@ -291,6 +313,23 @@ export default function InventoryHistoryPage() {
                           {movement.adjustment}
                         </span>
                       </td>
+                      <td className="px-5 py-4 text-sm">
+                        <p className="font-semibold text-slate-800">
+                          {movementType === "sale"
+                            ? "Checkout sale"
+                            : movementType === "cancellation"
+                              ? "Cancellation restoration"
+                              : "Manual adjustment"}
+                        </p>
+                        {movement.order && (
+                          <Link
+                            to={`/admin/orders/${movement.order}`}
+                            className="mt-1 inline-block text-xs font-semibold text-indigo-600 hover:underline"
+                          >
+                            Order #{movement.order.slice(-8)}
+                          </Link>
+                        )}
+                      </td>
                       <td className="whitespace-nowrap px-5 py-4 text-sm font-medium text-slate-700">
                         {movement.previousStock}
                         <ArrowRight
@@ -304,13 +343,22 @@ export default function InventoryHistoryPage() {
                         title={movement.reason}
                       >
                         {movement.reason}
+                        {movement.note && (
+                          <p className="mt-1 text-xs text-slate-500">
+                            {movement.note}
+                          </p>
+                        )}
                       </td>
                       <td className="px-5 py-4">
                         <p className="text-sm font-medium text-slate-800">
-                          {movement.admin?.name ?? "Unknown admin"}
+                          {actor?.name ??
+                            (actorType === "system"
+                              ? "System"
+                              : `Deleted or unknown ${actorType}`)}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {movement.admin?.email ?? ""}
+                          <span className="capitalize">{actorType}</span>
+                          {actor?.email ? ` · ${actor.email}` : ""}
                         </p>
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">

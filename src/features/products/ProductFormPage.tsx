@@ -110,6 +110,7 @@ export default function ProductFormPage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
+      await queryClient.invalidateQueries({ queryKey: ["admin", "inventory"] });
       navigate("/admin/products");
     },
     onError: (err: unknown) => {

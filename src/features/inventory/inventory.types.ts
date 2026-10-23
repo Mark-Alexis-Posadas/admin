@@ -10,6 +10,11 @@ export interface InventoryMovement {
       isPrimary?: boolean;
     }[];
   } | null;
+  type?: "manual" | "sale" | "cancellation";
+  actorType?: "admin" | "customer" | "system";
+  actor?: { _id: string; name: string; email: string } | null;
+  order?: string | null;
+  note?: string;
   admin: {
     _id: string;
     name: string;

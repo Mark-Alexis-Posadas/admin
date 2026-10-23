@@ -48,6 +48,8 @@ const OrderDetailsPage = () => {
           queryKey: ["admin", "orders"],
         }),
         queryClient.invalidateQueries({ queryKey: ["admin", "analytics"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "inventory"] }),
+        queryClient.invalidateQueries({ queryKey: ["admin", "products"] }),
       ]);
     },
 
